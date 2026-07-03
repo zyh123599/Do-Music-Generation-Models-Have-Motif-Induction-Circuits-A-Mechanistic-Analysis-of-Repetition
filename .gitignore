@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+.eggs/
+build/
+dist/
+.pytest_cache/
+.venv/
+venv/
+
+# Data & results (regenerated on the server; never commit audio/model blobs)
+data/
+results/
+*.wav
+*.mid
+*.npy
+*.npz
+!tests/fixtures/**
+
+# Models / caches
+checkpoints/
+.cache/
+soundfonts/*.sf2
+
+# Misc
+.DS_Store
+*.log

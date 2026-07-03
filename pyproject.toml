@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "motif-circuits"
+version = "0.1.0"
+description = "Mechanistic analysis of motif induction circuits in autoregressive music transformers (MusicGen)"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+dependencies = [
+    "numpy>=1.24",
+    "scipy>=1.10",
+    "pyyaml>=6.0",
+    "tqdm>=4.65",
+]
+
+[project.optional-dependencies]
+# Full research pipeline on the GPU server (audiocraft pins its own torch/xformers).
+server = [
+    "audiocraft==1.3.0",
+    "librosa>=0.10",
+    "pretty_midi>=0.2.10",
+    "mido>=1.3",
+    "soundfile>=0.12",
+    "matplotlib>=3.7",
+    "pandas>=2.0",
+]
+dev = ["pytest>=7.0"]
+
+[tool.setuptools.packages.find]
+include = ["motif_circuits*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
