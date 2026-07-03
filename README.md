@@ -93,9 +93,20 @@ python scripts/00_smoke_test.py --config configs/default.yaml
 ## 测试
 
 ```bash
-pytest tests/ -q          # 全套 CPU 测试
+pytest tests/ -q          # 全套 CPU 测试（144 个）
 pytest tests/test_delay_map.py -q   # 坐标核心（与 vendored audiocraft pattern 交叉验证）
 ```
+
+## 当前状态与注意事项
+
+- 全部模块与脚本已实现并通过 144 个 CPU 单元/集成测试（坐标映射、hook 数学、
+  对齐、统计、度量、刺激构建、脚本接线）。
+- **GPU 路径（模型加载、真实 attention 捕获、patching、生成）在本仓库内是
+  mock 验证的**——上服务器后第一件事跑 `scripts/00_smoke_test.py`，7 项全
+  PASS 再进入流水线；任何 audiocraft 版本差异都会在这里暴露。
+- 可选项：FAD/CLAP 质量评测需要额外 `pip install fadtk laion_clap`；
+  S7 真实验证集需按 `motif_circuits/stimuli/real.py` 的说明准备
+  `riffs.csv`；听测（计划书 §7）不在代码范围内。
 
 ## 许可
 

@@ -109,8 +109,9 @@ delay_map_for(model) -> DelayMap      # DelayMap.from_audiocraft(model.lm.patter
 encode_audio(model, wav: np.ndarray | torch.Tensor, sr: int) -> torch.Tensor  # [1,K,T] long
 decode_codes(model, codes) -> np.ndarray  # [1, T_samples] float
 teacher_forcing_logprobs(model, codes, condition_tensors=None) -> TFResult
-    # TFResult: logits [B,K,T,card] (cpu float32), logprob_true [B,K,T], mask [B,K,T]
+    # TFResult: logits [B,K,T,card] (cpu float32, NaN tails zeroed), logprob_true [B,K,T], mask [B,K,T]
     # runs lm.compute_predictions under model.autocast, no_grad
+logprobs_of(logits, tokens) -> [B,K,T]   # arbitrary-token scoring (patching metric)
 
 # hooks.py  — all context managers, all reset streaming-safe
 class AttentionCapture:
