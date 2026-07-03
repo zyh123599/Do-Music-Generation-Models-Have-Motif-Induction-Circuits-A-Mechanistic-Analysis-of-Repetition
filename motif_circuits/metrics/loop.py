@@ -107,13 +107,16 @@ def audio_autocorr_collapse(
 
     The last ``tail_s`` seconds are reduced to a 50 Hz RMS envelope
     (non-overlapping ``sr // 50``-sample windows). The envelope is
-    mean-subtracted and variance-normalized, and its *biased* normalized
-    autocorrelation ``ac[l] = (1/N) * sum_t e[t] e[t+l] / var`` is scanned
-    over lags between ``min_lag_s`` and ``max_lag_s`` (0.2–2.5 s: shorter
-    lags are note-level periodicity, longer ones exceed the tail). A near-1
-    peak means the tail's dynamics are an (almost) exact short loop. Note
-    the biased normalization shrinks the achievable peak by ``(N - l) / N``
-    at lag ``l``, penalizing loops long relative to the tail.
+    mean-subtracted and variance-normalized, and its *unbiased* normalized
+    autocorrelation ``ac[l] = (1/(N-l)) * sum_t e[t] e[t+l] / var`` is
+    scanned over lags between ``min_lag_s`` and ``max_lag_s`` (0.2–2.5 s:
+    shorter lags are note-level periodicity, longer ones exceed the tail).
+    A near-1 peak means the tail's dynamics are an (almost) exact short
+    loop at ANY lag in the range — unbiased normalization keeps the ceiling
+    at ~1 regardless of the loop length (a biased estimator would cap the
+    peak at ``(N - l) / N``, systematically missing loops longer than a few
+    hundred ms). The search range keeps >= 50% overlap (2.5 s lag in a 5 s
+    tail), bounding the extra variance of the unbiased estimator.
 
     Parameters
     ----------
@@ -150,7 +153,9 @@ def audio_autocorr_collapse(
     if var <= _EPS:
         return 0.0, 0.0
     N = len(e)
-    ac = np.correlate(e, e, mode="full")[N - 1:] / (N * var)  # biased, ac[0] = 1
+    raw = np.correlate(e, e, mode="full")[N - 1:]
+    overlap = np.maximum(N - np.arange(N), 1)
+    ac = raw / (overlap * var)  # unbiased, ac[0] = 1, ceiling ~1 at any lag
     max_lag = min(max_lag, N - 1)
     if min_lag > max_lag:
         return 0.0, 0.0
