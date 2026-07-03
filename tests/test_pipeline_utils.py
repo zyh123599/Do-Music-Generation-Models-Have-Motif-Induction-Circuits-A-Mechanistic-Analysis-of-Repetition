@@ -104,3 +104,53 @@ class TestScriptHygiene:
                              timeout=60)
         assert res.returncode == 0, res.stderr[-800:]
         assert "--config" in res.stdout and "--override" in res.stdout
+
+
+def _import_script(name):
+    import importlib.util
+
+    scripts_dir = str(REPO / "scripts")
+    if scripts_dir not in sys.path:  # scripts resolve `_common` relative
+        sys.path.insert(0, scripts_dir)
+    spec = importlib.util.spec_from_file_location(name, REPO / "scripts" / name)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+class TestStatsScriptHelpers:
+    """Lock the profile-based permutation statistics of scripts/04."""
+
+    def _setup(self):
+        mod = _import_script("04_stats_heatmaps.py")
+        n_lags, L, H = 60, 1, 2
+        profile = np.full((1, L, H, n_lags), 0.01)
+        profile[0, 0, 0, 30] = 0.5          # head 0: bump exactly at lag 30
+        ap = np.arange(40, 50)
+        a = ap - 31                          # pair lag to successor = 30
+        return mod, profile, [(ap, a)]
+
+    def test_observed_hits_planted_bump(self):
+        mod, profile, phis = self._setup()
+        obs = mod.observed_scores_from_profiles(profile, phis, window=2)
+        # head 0 window sum ~ 0.5 + 4 * 0.01; head 1 ~ 5 * 0.01
+        assert obs[0, 0] == pytest.approx(0.54, abs=1e-6)
+        assert obs[0, 1] == pytest.approx(0.05, abs=1e-6)
+
+    def test_permutation_null_below_observed(self):
+        mod, profile, phis = self._setup()
+        rng = np.random.default_rng(0)
+        null = mod.permuted_scores_from_profiles(
+            profile, phis, [(9, 19)], window=2, n_perm=200, rng=rng)
+        obs = mod.observed_scores_from_profiles(profile, phis, window=2)
+        # shifted phis almost never land on the bump for head 0
+        assert (null[:, 0, 0] >= obs[0, 0]).mean() < 0.2
+        # head 1 (flat profile) is exchangeable: null ~ observed
+        assert np.nanmedian(null[:, 0, 1]) == pytest.approx(0.05, abs=0.01)
+
+    def test_all_out_of_range_pairs_are_nan(self):
+        mod = _import_script("04_stats_heatmaps.py")
+        profile = np.full((1, 2, 10), 0.01)
+        s = mod._profile_score(profile, np.array([5]), np.array([50]),
+                               window=1)
+        assert np.isnan(s).all()

@@ -129,6 +129,11 @@ def generate_with_interventions(
 
     params = dict(model.generation_params)
     params.update(gen_overrides)
+    if params.get("two_step_cfg"):
+        raise ValueError(
+            "two_step_cfg runs two forwards per generation step, which would "
+            "desynchronize the interventions' absolute-step counters; use the "
+            "default single-pass CFG")
 
     torch.manual_seed(int(seed))
     if torch.cuda.is_available():

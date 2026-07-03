@@ -147,7 +147,10 @@ class AttentionCapture:
         _check_supported_attention(module)
         H, d_head = _head_geometry(module)
         D = int(module.embed_dim)
-        with torch.no_grad():
+        # The forward usually runs under the model's autocast; disable it so
+        # the recomputation genuinely happens in float32.
+        with torch.no_grad(), torch.autocast(device_type=query.device.type,
+                                             enabled=False):
             x = query.detach().float()
             w = module.in_proj_weight.detach().float()
             b = module.in_proj_bias
