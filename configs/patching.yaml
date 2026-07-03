@@ -1,0 +1,11 @@
+# scripts/05_patching.py
+patching:
+  pair_categories: [S1, S2]   # clean samples with S6pair partners
+  max_pairs: 50               # pairs per condition (paper scale: all)
+  ks: [4, 8, 16]              # head-set sizes: candidates vs controls
+  curve_ks: [1, 2, 4, 8, 16, 32]
+  metric_frames: 25           # L = first 0.5 s of A'
+  codebooks: [0, 1, 2, 3]
+  n_mean_samples: 50          # S6 samples for mean-ablation vectors
+  control_seed: 0             # random-head control sampling
+  heads: null                 # explicit [[layer, head], ...] overrides candidates.json

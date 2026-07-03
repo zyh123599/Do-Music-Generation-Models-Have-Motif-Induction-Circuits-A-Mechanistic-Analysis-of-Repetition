@@ -1,0 +1,12 @@
+# scripts/06_ablation_generate.py
+ablation:
+  conditions: [baseline, ablate_candidates, ablate_random, ablate_periodic]
+  k: 8                    # heads ablated per non-baseline condition
+  modes: [unconditional, continuation]
+  n_samples: 50           # generations per condition x mode (plan: >=200)
+  n_seeds: 3              # seed replicas (plan: >=3)
+  duration_s: 10.0
+  n_prompts: 20           # S1 samples whose first 3 s prompt the continuation
+  prompt_s: 3.0
+  descriptions: null      # null = unconditional; or a text prompt string
+  control_seed: 0

@@ -1,0 +1,13 @@
+# scripts/01_build_stimuli.py + 02_encode_stimuli.py
+stimuli:
+  n_per_category: 100    # iteration scale; paper scale: 500 (plan section 4)
+  render_seeds: 3        # >=3 renders per logical sample (EnCodec noise avg)
+  categories: [S1, S2, S3, S4, S5, S6]
+  soundfont: null        # null -> auto-detect ($MOTIF_SF2 / system sf2)
+  bpm: [80.0, 140.0]
+  programs: [0, 4, 25, 33, 48, 61, 80]
+  seed: 42
+  render: true
+
+encode:
+  batch_size: 16         # wavs encoded per compression-model batch

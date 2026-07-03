@@ -1,0 +1,14 @@
+# Global defaults, merged under every per-script config.
+model:
+  size: small          # small | medium | large
+  device: cuda
+
+paths:
+  data_root: data
+  results_root: results
+
+audio:
+  sample_rate: 32000
+  frame_rate: 50
+
+seed: 42

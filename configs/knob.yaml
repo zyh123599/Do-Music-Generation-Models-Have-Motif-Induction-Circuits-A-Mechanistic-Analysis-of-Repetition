@@ -1,0 +1,15 @@
+# scripts/08_knob_eval.py
+knob:
+  top_k: 8
+  gammas: [0.0, 0.5, 0.8, 1.0, 1.5, 2.0, 3.0]
+  n_prompts: 20
+  prompt_s: 3.0
+  n_samples: 30            # per gamma (paper scale: >=200)
+  duration_s: 10.0
+  repair_gamma: 0.5        # T2 loop-repair suppression strength
+  taus: [0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9]
+
+metrics:                   # shared with 07_output_metrics.py
+  stripe_min_lag: 25       # 0.5 s
+  stripe_max_lag: 300      # 6 s
+  n_bootstrap: 1000

@@ -1,0 +1,18 @@
+# scripts/03_head_screening.py + 04_stats_heatmaps.py
+screening:
+  categories: [S1, S2, S3, S4, S5]   # pass B; pass A always uses S6
+  token_categories: [S1, S4]         # codebook-level token IS (H1)
+  max_lag: 400                       # frames (8 s) for lag spectra
+  window: 2                          # +-w frames motif IS tolerance
+  layers: null                       # null = all layers; list to restrict (OOM)
+  max_samples: null                  # cap per category (debug); null = all
+  n_verify: 10                       # S2 chroma-alignment sanity checks
+  periodic_z: 4.0                    # robust z for periodic-head flagging
+  periodic_vote: 0.5                 # fraction of S6 samples to call it periodic
+
+stats:
+  n_perm: 1000                       # permutation count (plan: 1000)
+  fdr_q: 0.05
+  positive_categories: [S2, S3]      # candidates must be significant on ALL
+  negative_category: S5              # ... and NOT significant here
+  top_k_report: 64
