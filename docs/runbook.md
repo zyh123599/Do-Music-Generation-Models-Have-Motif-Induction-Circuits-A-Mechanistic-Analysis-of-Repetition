@@ -59,6 +59,13 @@ python scripts/03_head_screening.py --override model.size=medium
   `pip install --force-reinstall "numpy==1.26.4" "scipy==1.11.4"`，
   然后 `python -c "import scipy.signal, scipy.special, torch, audiocraft"`
   验证。仓库 `[server]` extra 已固定该组合，重装请用 `pip install -e ".[server,dev]"`。
+- **`import av` 报 `CXXABI_1.3.13 not found`（libopenvino）**：环境里存在
+  conda-forge 的 ffmpeg/openvino 构建，av 链接到了它而系统 libstdc++ 过旧。
+  首选：`pip install --force-reinstall --only-binary av "av==11.0.0"`
+  （官方 wheel 自带捆绑 ffmpeg，不依赖环境库）。若仍失败：
+  `conda install -y -c conda-forge "libstdcxx-ng>=13"` 并
+  `conda env config vars set LD_LIBRARY_PATH=$CONDA_PREFIX/lib`，
+  重新激活环境后验证 `python -c "import av"`。
 - **fluidsynth 缺失**：`apt install fluidsynth fluid-soundfont-gm`；无 sudo 用
   conda-forge 并设 `MOTIF_SF2`。
 - **HF 下载失败**：预下载 `facebook/musicgen-<size>` 到 `HF_HOME`，或配置代理。
