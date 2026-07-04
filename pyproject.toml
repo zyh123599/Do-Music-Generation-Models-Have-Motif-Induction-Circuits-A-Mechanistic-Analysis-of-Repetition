@@ -18,14 +18,19 @@ dependencies = [
 
 [project.optional-dependencies]
 # Full research pipeline on the GPU server (audiocraft pins its own torch/xformers).
+# numpy/scipy are pinned to the numpy-1.x ABI pair matching the torch 2.1.0
+# stack: a scipy wheel built for numpy 2 silently breaks once numba/librosa
+# constraints downgrade numpy ("All ufuncs must have type numpy.ufunc").
 server = [
     "audiocraft==1.3.0",
+    "numpy==1.26.4",
+    "scipy>=1.10,<1.14",
     "librosa>=0.10",
     "pretty_midi>=0.2.10",
     "mido>=1.3",
     "soundfile>=0.12",
     "matplotlib>=3.7",
-    "pandas>=2.0",
+    "pandas>=2.0,<2.3",
 ]
 dev = ["pytest>=7.0"]
 

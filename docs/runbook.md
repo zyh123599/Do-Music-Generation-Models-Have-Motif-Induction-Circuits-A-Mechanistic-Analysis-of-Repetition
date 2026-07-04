@@ -53,6 +53,12 @@ python scripts/03_head_screening.py --override model.size=medium
 - **OOM（medium/large 筛查）**：`--override screening.layers=[0,1,...,23]`
   分段跑（先做一半层，`--force` 换另一半时注意 pass A 的层集合必须一致——
   脚本会校验并报错）。
+- **`All ufuncs must have type numpy.ufunc`（import scipy 即崩）**：
+  numpy/scipy 二进制 ABI 不一致（按 numpy 2 编译的 scipy 撞上被 numba/librosa
+  依赖降级回来的 numpy 1.x）。修复：
+  `pip install --force-reinstall "numpy==1.26.4" "scipy==1.11.4"`，
+  然后 `python -c "import scipy.signal, scipy.special, torch, audiocraft"`
+  验证。仓库 `[server]` extra 已固定该组合，重装请用 `pip install -e ".[server,dev]"`。
 - **fluidsynth 缺失**：`apt install fluidsynth fluid-soundfont-gm`；无 sudo 用
   conda-forge 并设 `MOTIF_SF2`。
 - **HF 下载失败**：预下载 `facebook/musicgen-<size>` 到 `HF_HOME`，或配置代理。
