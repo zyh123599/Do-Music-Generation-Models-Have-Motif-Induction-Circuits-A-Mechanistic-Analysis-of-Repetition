@@ -118,6 +118,44 @@ def _import_script(name):
     return mod
 
 
+class TestRankedHeadsFallback:
+    """load_ranked_heads: strict by default, pilot fallback when enabled."""
+
+    def _write(self, tmp_path, candidates, ranked_all=None):
+        import json
+
+        (tmp_path / "candidates.json").write_text(json.dumps(candidates))
+        if ranked_all is not None:
+            (tmp_path / "ranked_all.json").write_text(json.dumps(ranked_all))
+
+    def test_candidates_present(self, tmp_path):
+        common = _import_script("_common.py")
+        self._write(tmp_path, [{"layer": 3, "head": 1}, {"layer": 0, "head": 2}])
+        assert common.load_ranked_heads(tmp_path) == [(3, 1), (0, 2)]
+
+    def test_empty_strict_aborts(self, tmp_path):
+        common = _import_script("_common.py")
+        self._write(tmp_path, [])
+        with pytest.raises(SystemExit, match="allow_ranking_fallback"):
+            common.load_ranked_heads(tmp_path)
+
+    def test_empty_fallback_skips_periodic(self, tmp_path):
+        common = _import_script("_common.py")
+        ranked = [{"layer": 1, "head": 0, "excess": 0.5, "periodic": False},
+                  {"layer": 2, "head": 3, "excess": 0.4, "periodic": True},
+                  {"layer": 4, "head": 5, "excess": 0.3, "periodic": False},
+                  {"layer": 6, "head": 6, "excess": None, "periodic": False}]
+        self._write(tmp_path, [], ranked)
+        heads = common.load_ranked_heads(tmp_path, allow_fallback=True)
+        assert heads == [(1, 0), (4, 5)]
+
+    def test_fallback_without_ranking_file(self, tmp_path):
+        common = _import_script("_common.py")
+        self._write(tmp_path, [])
+        with pytest.raises(SystemExit, match="ranked_all"):
+            common.load_ranked_heads(tmp_path, allow_fallback=True)
+
+
 class TestStatsScriptHelpers:
     """Lock the profile-based permutation statistics of scripts/04."""
 

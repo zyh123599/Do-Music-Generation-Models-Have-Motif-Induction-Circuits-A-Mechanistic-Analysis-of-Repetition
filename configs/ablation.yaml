@@ -10,3 +10,4 @@ ablation:
   prompt_s: 3.0
   descriptions: null      # null = unconditional; or a text prompt string
   control_seed: 0
+  allow_ranking_fallback: false  # pilot/plumbing ONLY: empty candidates -> excess ranking

@@ -9,3 +9,4 @@ patching:
   n_mean_samples: 50          # S6 samples for mean-ablation vectors
   control_seed: 0             # random-head control sampling
   heads: null                 # explicit [[layer, head], ...] overrides candidates.json
+  allow_ranking_fallback: false  # pilot/plumbing ONLY: empty candidates -> excess ranking

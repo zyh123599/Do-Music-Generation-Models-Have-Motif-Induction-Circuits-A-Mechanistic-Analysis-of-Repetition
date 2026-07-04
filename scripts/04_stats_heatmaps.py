@@ -169,22 +169,27 @@ def main() -> int:  # noqa: PLR0915
     cand_mask &= ~results[neg]["sig"]
     cand_mask &= ~periodic
     rank_score = np.mean([results[c]["observed"] for c in pos], axis=0)
-    order = np.argsort(np.where(cand_mask, -rank_score, np.inf), axis=None)
     n_cand = int(cand_mask.sum())
-    top_k = min(n_cand, int(stats_cfg.get("top_k_report", 64)))
-    candidates = []
     L, H = cand_mask.shape
-    for flat in order[:top_k]:
+    # full ranking over ALL heads (candidates first by construction of the
+    # sort key); ranked_all.json powers the pilot-only fallback of 05/06/08
+    sort_key = np.where(np.isfinite(rank_score), -rank_score, np.inf)
+    all_entries = []
+    for flat in np.argsort(sort_key, axis=None):
         li, h = divmod(int(flat), H)
         entry = {"layer": int(layers[li]), "head": int(h),
                  "excess": float(rank_score[li, h]),
-                 "periodic": bool(periodic[li, h])}
+                 "periodic": bool(periodic[li, h]),
+                 "candidate": bool(cand_mask[li, h])}
         for cat in categories:
             entry[f"p_{cat.lower()}"] = float(results[cat]["pvals"][li, h])
             entry[f"excess_{cat.lower()}"] = float(
                 results[cat]["observed"][li, h])
-        candidates.append(entry)
+        all_entries.append(entry)
+    top_k = min(n_cand, int(stats_cfg.get("top_k_report", 64)))
+    candidates = [e for e in all_entries if e["candidate"]][:top_k]
     save_json(out_dir / "candidates.json", candidates)
+    save_json(out_dir / "ranked_all.json", all_entries)
     save_json(out_dir / "stats_summary.json", {
         "n_candidates": n_cand,
         "n_periodic": int(periodic.sum()),

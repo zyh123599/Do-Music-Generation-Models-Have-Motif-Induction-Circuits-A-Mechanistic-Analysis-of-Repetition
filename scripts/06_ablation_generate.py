@@ -15,7 +15,8 @@ import sys
 
 import numpy as np
 
-from _common import make_parser, results_root, setup, stimuli_dir
+from _common import (load_ranked_heads, make_parser, results_root, setup,
+                     stimuli_dir)
 
 
 def main() -> int:  # noqa: PLR0915
@@ -30,8 +31,7 @@ def main() -> int:  # noqa: PLR0915
                                       generate_with_interventions,
                                       load_musicgen, model_geometry)
     from motif_circuits.stimuli import load_manifest
-    from motif_circuits.utils.io import (load_json, load_npz, save_npz,
-                                         write_run_json)
+    from motif_circuits.utils.io import load_npz, save_npz, write_run_json
 
     acfg = cfg["ablation"]
     K = int(acfg["k"])
@@ -44,8 +44,9 @@ def main() -> int:  # noqa: PLR0915
     rng = np.random.default_rng(int(acfg.get("control_seed", 0)))
 
     # ------------------------------------------------------ head sets
-    cands = load_json(screening_dir / "candidates.json")
-    ranked = [(int(c["layer"]), int(c["head"])) for c in cands]
+    ranked = load_ranked_heads(
+        screening_dir,
+        allow_fallback=bool(acfg.get("allow_ranking_fallback", False)))
     arrays_null, _ = load_npz(screening_dir / "null_model.npz")
     layer_ids = list(arrays_null["layers"])
     periodic_heads = [(int(layer_ids[li]), int(h)) for li, h in

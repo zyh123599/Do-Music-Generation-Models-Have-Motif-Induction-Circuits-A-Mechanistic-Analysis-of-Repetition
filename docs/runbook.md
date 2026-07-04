@@ -79,8 +79,12 @@ python scripts/03_head_screening.py --override model.size=medium
 ## 结果核对清单（每步跑完看什么）
 
 1. 00 全 PASS；03a 日志中周期头数量占比通常 <15%。
-2. 04 热图应出现层间结构（而非均匀噪声）；`stats_summary.json` 的
-   `n_candidates` > 0 才能进入 5/6/8。
+2. 04 热图应出现层间结构（而非均匀噪声）。**正式跑**要求
+   `stats_summary.json` 的 `n_candidates` > 0 才能进入 5/6/8（为 0 说明
+   筛查功效不足或假设不成立，应先加大样本量）；**pilot/管线验证**可用
+   `--override patching.allow_ranking_fallback=true`（06/08 同名开关）让
+   5/6/8 退化为按 excess 排名取头跑通流程——此时下游数字仅验证代码，
+   无科学意义，日志会显式警告。
 3. 05 `recovery_curve.png`：候选头曲线应明显高于 random/periodic 对照并随 K 饱和。
 4. 07 对比图：`ablate_candidates` 相对 baseline 的动机回归率/条纹能量应下降，
    `ablate_periodic` 主要影响节拍稳定性相关指标（H3 功能分离）。

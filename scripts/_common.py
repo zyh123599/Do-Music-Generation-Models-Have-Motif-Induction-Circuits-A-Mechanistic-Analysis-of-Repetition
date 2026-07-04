@@ -67,6 +67,48 @@ def load_codes_np(category_dir: Path, sample_id: str) -> np.ndarray:
     return np.load(path)
 
 
+def load_ranked_heads(screening_dir: Path,
+                      allow_fallback: bool = False) -> tp.List[tp.Tuple[int, int]]:
+    """Ranked heads for interventions: verified candidates, else fallback.
+
+    Reads ``candidates.json`` (scripts/04). When it is EMPTY:
+
+    * ``allow_fallback=False`` (default; real experiments): abort with an
+      actionable message — causal claims require statistically verified
+      candidate heads.
+    * ``allow_fallback=True`` (pilot/plumbing runs only): fall back to the
+      full excess ranking (``ranked_all.json``) with periodic heads removed,
+      and warn loudly. Downstream numbers are then only good for validating
+      that the pipeline runs, not for any scientific conclusion.
+    """
+    from motif_circuits.utils.io import load_json
+
+    cands = load_json(screening_dir / "candidates.json")
+    if cands:
+        return [(int(c["layer"]), int(c["head"])) for c in cands]
+    if not allow_fallback:
+        raise SystemExit(
+            f"{screening_dir / 'candidates.json'} is empty: no heads passed "
+            "the significance criteria. Rerun scripts/03+04 at larger sample "
+            "scale, set the explicit head list in the config, or — for "
+            "pilot/plumbing runs ONLY — override "
+            "<section>.allow_ranking_fallback=true")
+    ranked_path = screening_dir / "ranked_all.json"
+    if not ranked_path.is_file():
+        raise SystemExit(f"{ranked_path} missing — rerun scripts/04 "
+                         "(older runs predate the fallback ranking)")
+    def _finite(x) -> bool:  # JSON stores NaN as null -> None
+        return isinstance(x, (int, float)) and np.isfinite(x)
+
+    entries = [e for e in load_json(ranked_path)
+               if not e.get("periodic") and _finite(e.get("excess"))]
+    logger.warning(
+        "candidates.json is EMPTY — falling back to the raw excess ranking "
+        "(%d non-periodic heads). Pipeline-validation mode: downstream "
+        "results are NOT scientifically meaningful.", len(entries))
+    return [(int(e["layer"]), int(e["head"])) for e in entries]
+
+
 def bootstrap_ci(values: np.ndarray, n_boot: int = 1000, alpha: float = 0.05,
                  rng: tp.Optional[np.random.Generator] = None
                  ) -> tp.Tuple[float, float, float]:

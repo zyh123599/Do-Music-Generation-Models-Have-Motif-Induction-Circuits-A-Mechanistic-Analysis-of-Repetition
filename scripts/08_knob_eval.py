@@ -19,8 +19,8 @@ import sys
 
 import numpy as np
 
-from _common import (evaluate_generation_sample, make_parser, results_root,
-                     setup, stimuli_dir)
+from _common import (evaluate_generation_sample, load_ranked_heads,
+                     make_parser, results_root, setup, stimuli_dir)
 
 
 def main() -> int:  # noqa: PLR0915
@@ -42,7 +42,9 @@ def main() -> int:  # noqa: PLR0915
     mcfg["taus"] = taus
     out_root = results_root(cfg) / "knob"
     out_root.mkdir(parents=True, exist_ok=True)
-    candidates_json = results_root(cfg) / "screening" / "candidates.json"
+    knob_heads = load_ranked_heads(
+        results_root(cfg) / "screening",
+        allow_fallback=bool(kcfg.get("allow_ranking_fallback", False)))
 
     model = load_musicgen(cfg["model"]["size"], cfg["model"]["device"])
     geom = model_geometry(model)
@@ -68,9 +70,8 @@ def main() -> int:  # noqa: PLR0915
     assert prompts, "knob eval needs rendered S1 stimuli"
 
     def run_one(gamma: float, seed: int, prompt) -> dict:
-        ivs = (MotifRecurrenceKnob.from_candidates(
-            candidates_json, top_k=top_k, gamma=gamma).interventions()
-            if gamma != 1.0 else None)
+        ivs = (MotifRecurrenceKnob(knob_heads[:top_k], gamma).interventions()
+               if gamma != 1.0 else None)
         res = generate_with_interventions(
             model, ivs, prompt_wav=prompt["wav"], prompt_sr=prompt["sr"],
             num_samples=1, duration=duration, seed=seed)

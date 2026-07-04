@@ -13,8 +13,8 @@ import sys
 
 import numpy as np
 
-from _common import (load_codes_np, make_parser, results_root, setup,
-                     stimuli_dir)
+from _common import (load_codes_np, load_ranked_heads, make_parser,
+                     results_root, setup, stimuli_dir)
 
 
 def main() -> int:  # noqa: PLR0915
@@ -48,9 +48,9 @@ def main() -> int:  # noqa: PLR0915
     if pcfg.get("heads"):
         ranked = [(int(l), int(h)) for l, h in pcfg["heads"]]
     else:
-        cands = load_json(screening_dir / "candidates.json")
-        ranked = [(int(c["layer"]), int(c["head"])) for c in cands]
-    assert ranked, "no candidate heads (run scripts/04 or set patching.heads)"
+        ranked = load_ranked_heads(
+            screening_dir,
+            allow_fallback=bool(pcfg.get("allow_ranking_fallback", False)))
 
     arrays_null, _ = load_npz(screening_dir / "null_model.npz")
     periodic_mask = arrays_null["periodic_mask"]
