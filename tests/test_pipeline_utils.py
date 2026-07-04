@@ -156,6 +156,27 @@ class TestRankedHeadsFallback:
             common.load_ranked_heads(tmp_path, allow_fallback=True)
 
 
+class TestH1Summary:
+    def test_planted_division_of_labor(self):
+        mod = _import_script("09_h1_codebooks.py")
+        rng = np.random.default_rng(0)
+        L, H = 4, 8
+        noise = lambda: rng.random((L, H)) * 0.01  # noqa: E731
+        # coarse codebooks carry signal on S1; fine ones don't
+        tok_s1 = {0: noise() + 0.3, 1: noise() + 0.3,
+                  2: noise() + 0.02, 3: noise() + 0.02}
+        # S4: coarse retained (~90%), fine collapses (~20%)
+        tok_s4 = {0: tok_s1[0] * 0.9, 1: tok_s1[1] * 0.9,
+                  2: tok_s1[2] * 0.2, 3: tok_s1[3] * 0.2}
+        s = mod.h1_summary(tok_s1, tok_s4, top_n=16)
+        assert s["h1_i_coarse_vs_fine_S1"]["ratio"] > 5
+        assert s["h1_i_coarse_vs_fine_S1"]["wilcoxon_p"] < 0.01
+        ret = s["h1_ii_retention_S4_over_S1"]
+        assert ret["coarse_median"] > 0.8 > ret["fine_median"]
+        assert ret["wilcoxon_p"] < 0.01
+        assert len(s["top_heads"]) == 16
+
+
 class TestStatsScriptHelpers:
     """Lock the profile-based permutation statistics of scripts/04."""
 
